@@ -1,12 +1,13 @@
 package com.luv2code.aopdemo.aspect;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,34 @@ import com.luv2code.aopdemo.Account;
 @Order(2)
 public class MyDemoLogginAspect {
 
+	private Logger myLogger = Logger.getLogger(getClass().getName());
+	
+	@Around("execution(* com.luv2code.aopdemo.service.*.getFortune(..))")
+	public Object aroundGetFortune(
+			ProceedingJoinPoint theProceedingJoinPoint) throws Throwable {
+		
+		// print out method we are advisiting on
+		String method = theProceedingJoinPoint.getSignature().toShortString();
+		myLogger.info("\n======>>>> executing @Around on method :" + method);
+		
+		// get begin timestamp
+		long begin = System.currentTimeMillis();
+		
+		// now, let's execute themethod
+		Object result = theProceedingJoinPoint.proceed();
+		
+		// get end timestamp
+		long end = System.currentTimeMillis();
+		
+		// compute duration and display it
+		long duration = end - begin;
+		myLogger.info("\n=======> Duration : " + duration / 1000.0 + " seconds");
+		
+		return result;
+		
+	}
+	
+	
 	// add a new advice for @AfterReturning on the findaccounts method
 	//Ne pas oublier les parenthèses traitresses et l'execution
 	@AfterReturning(
@@ -27,10 +56,10 @@ public class MyDemoLogginAspect {
 				
 		// print out wich method we are advising on
 		String method = theJoinPoint.getSignature().toShortString();
-		System.out.println("\n======>>>> executing @AfterReturning on method :" + method);
+		myLogger.info("\n======>>>> executing @AfterReturning on method :" + method);
 		
 		// print out the results of the method call 
-		System.out.println("\n======>>>> executing @AfterReturning on method :" + result);
+		myLogger.info("\n======>>>> executing @AfterReturning on method :" + result);
 		
 		// let's post process the data ...let's modify it
 		
@@ -38,7 +67,7 @@ public class MyDemoLogginAspect {
 		// convert the account names to uppercase
 		convertAccountNamesToUpperCase(result);
 		
-		System.out.println("\n======>>>> executing @AfterReturning on method :" + result);
+		myLogger.info("\n======>>>> executing @AfterReturning on method :" + result);
 		
 	}
 
